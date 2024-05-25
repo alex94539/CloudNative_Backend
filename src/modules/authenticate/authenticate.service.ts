@@ -19,7 +19,7 @@ export class AuthenticateService {
         if (user?.password !== sha256(password)) {
             throw new UnauthorizedException();
         }
-        const payload = { sub: user.userId, username: user.username };
+        const payload = { role: user.role, username: user.username };
         return {
             token: await this.jwtService.signAsync(payload),
         };
