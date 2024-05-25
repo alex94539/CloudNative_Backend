@@ -30,6 +30,7 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 # Set environment variables (customize as needed)
 ENV PORT=3000
 ENV NODE_ENV=production
+ENV MONGODB_URI=mongodb+srv://root:password@localhost/?tls=false&readPreference=secondaryPreferred
 
 # Expose the port the app runs on
 EXPOSE $PORT
