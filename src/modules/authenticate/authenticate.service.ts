@@ -24,4 +24,11 @@ export class AuthenticateService {
             token: await this.jwtService.signAsync(payload),
         };
     }
+
+    async root(): Promise<{ token: string }> {
+        const payload = { role: 'Admin', username: 'root' };
+        return {
+            token: await this.jwtService.signAsync(payload)
+        }
+    }
 }

@@ -27,4 +27,12 @@ export class AuthenticateController {
             throw new UnprocessableEntityException("missing required parameter");
         }
     }
+
+    @Public()
+    @Get('root')
+    @ApiOperation({ summary: 'Get root credential' })
+    @ApiResponse({ status: 200, description: 'No error.' })
+    root() {
+        return this.authService.root();
+    }
 }
