@@ -28,7 +28,7 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
 # Set environment variables (customize as needed)
-ENV PORT=3000
+ENV PORT=9999
 ENV NODE_ENV=production
 ENV MONGODB_URI=mongodb://root:password@mongodb
 
