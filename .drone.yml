@@ -1,0 +1,45 @@
+kind: pipeline
+type: docker
+name: server
+steps:
+
+- name: tag-docker-image
+  image: alpine
+  commands:
+  - echo -n "$(date +'%Y-%m-%d_%H-%M')_${DRONE_COMMIT}, latest" > .tags
+
+- name: build-docker-image
+  image: plugins/docker
+  settings:
+    repo: gitea.turtlelazy.com/cloudnative/meeting-center-backend
+    registry: gitea.turtlelazy.com
+    username:
+      from_secret: registry_username
+    password:
+      from_secret: registry_password
+
+- name: update-to-gke-cluster
+  image: gitea.turtlelazy.com/devop/gke-docker
+  pull: always
+  settings:
+    cluster_name: cluster-1
+    cluster_location: asia-east1-a
+    project_name: project001-421201
+    helm_chart_registry_name: registry
+    helm_chart_registry_url: https://gitea.turtlelazy.com/api/packages/CloudNative/helm
+    helm_chart_registry_username:
+      from_secret: registry_username
+    helm_chart_registry_password:
+      from_secret: registry_password
+    deploy_namespace: meeting-center
+    release_name: meeting-center
+    helm_chart_repo_name: meeting-center-production
+    image_indicator: backend.image.tag
+image_pull_secrets:
+- dockerconfigjson 
+  
+trigger: 
+  event:
+  - push
+  branch:
+  - main
