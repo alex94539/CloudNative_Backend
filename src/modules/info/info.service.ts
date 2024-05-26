@@ -23,7 +23,8 @@ export class InfoService {
         }
     ]
 
-    getRooms(): Promise<Room[]> {
+    async getRooms(): Promise<Room[]> {
+
         return this.roomModel.find().exec();
     }
 

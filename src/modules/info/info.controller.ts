@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Request, UnauthorizedException } from '@nestjs/common';
 import { InfoService } from './info.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Room } from 'src/schemas/Room.schema';
@@ -22,7 +22,10 @@ export class InfoController {
     @ApiOperation({ summary: 'Add new meeting room info.' })
     @ApiResponse({ status: 200, description: 'No error.' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
-    async newRoom(@Body() newRoom: Room) {
+    async newRoom(@Request() req, @Body() newRoom: Room) {
+        if (!req?.role || req.role !== 'Admin') {
+            throw new UnauthorizedException('You must be admin to add new room');
+        }
         return this.infoService.newRoom(newRoom);
     }
 }
