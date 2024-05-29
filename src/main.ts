@@ -11,9 +11,9 @@ async function bootstrap() {
     .setDescription('The Meeting Center API description')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'token')
     .setVersion('1.0')
-    .setBasePath('api')
     .build();
   const document = SwaggerModule.createDocument(app, config);
+  app.setGlobalPrefix('api');
   SwaggerModule.setup('api', app, document);
   await app.listen(9999, '0.0.0.0');
 }
