@@ -1,11 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 export class User {
+    @Prop({ default: new Types.ObjectId() })
+    _id: Types.ObjectId
+
     @Prop()
     @ApiProperty()
     firstName: string;
@@ -18,7 +21,7 @@ export class User {
     @ApiProperty()
     email: string;
 
-    @Prop()
+    @Prop({ unique: true })
     @ApiProperty()
     username: string;
 
@@ -27,7 +30,7 @@ export class User {
     password: string;
 
     @Prop()
-    @ApiProperty({enum: ['Admin', 'User']})
+    @ApiProperty({ enum: ['Admin', 'User'] })
     role: string;
 }
 

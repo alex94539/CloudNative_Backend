@@ -1,11 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type RoomDocument = HydratedDocument<Room>;
 
 @Schema()
 export class Room {
+    @Prop({ default: new Types.ObjectId() })
+    _id: Types.ObjectId;
+
     @Prop({ required: true })
     @ApiProperty()
     name: string;
@@ -25,7 +28,6 @@ export class Room {
     @Prop({ required: true, default: true })
     @ApiProperty()
     eating: boolean
-
 }
 
 export const RoomSchema = SchemaFactory.createForClass(Room);

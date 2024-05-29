@@ -41,6 +41,7 @@ export class AuthGuard implements CanActivate {
             // so that we can access it in our route handlers
             request['role'] = payload.role;
             request['username'] = payload.username;
+            request['_id'] = payload._id;
         } catch {
             throw new UnauthorizedException();
         }

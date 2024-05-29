@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { sha256 } from 'js-sha256';
-import { Model } from 'mongoose';
-import { User } from 'src/schemas/User.schema';
+import { Model, Types } from 'mongoose';
+import { User } from 'src/interfaces/schemas/User.schema';
 
 
 @Injectable()
@@ -17,7 +17,11 @@ export class UserService {
         return createdUser.save();
     }
 
-    async findOne(username: string): Promise<User | undefined> {
+    async findById(userId: string): Promise<User | undefined> {
+        return this.userModel.findById(Types.ObjectId.createFromHexString(userId));
+    }
+
+    async findUser(username: string): Promise<User | undefined> {
         return this.userModel.findOne({ username: username });
     }
 }

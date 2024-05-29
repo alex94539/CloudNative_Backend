@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {cors: true});
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
   const config = new DocumentBuilder()
     .setTitle('Cloud Native Backend API')
     .setDescription('The Meeting Center API description')
