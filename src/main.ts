@@ -11,6 +11,7 @@ async function bootstrap() {
     .setDescription('The Meeting Center API description')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'token')
     .setVersion('1.0')
+    .setBasePath('https://meeing-center.ddns.net/api')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
