@@ -12,8 +12,8 @@ async function bootstrap() {
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'token')
     .setVersion('1.0')
     .build();
-  const document = SwaggerModule.createDocument(app, config);
   app.setGlobalPrefix('api');
+  const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   await app.listen(9999, '0.0.0.0');
 }
