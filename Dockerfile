@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node AS builder
+FROM node:22-alpine3.19 AS builder
 
 # Set working directory
 WORKDIR /usr/src/app
@@ -18,7 +18,7 @@ RUN npm install -g @nestjs/cli
 RUN npm run build
 
 # Stage 2: Runtime
-FROM node
+FROM node:22-alpine3.19
 
 # Set working directory
 WORKDIR /usr/src/app
