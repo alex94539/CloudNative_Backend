@@ -1,9 +1,15 @@
-import { Body, Controller, Get, HttpCode, Post, Query, Request, UnauthorizedException, NotFoundException, ConflictException, Patch, UnprocessableEntityException, Req } from '@nestjs/common';
-import { InfoService } from './info.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, Post, Query, Request, UnauthorizedException, NotFoundException, ConflictException, Patch, UnprocessableEntityException, Req, UseInterceptors, UploadedFile, UploadedFiles, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CreateMeetingDto, UpdateMeetingDto } from 'src/interfaces/dtos/CreateMeeting.dto';
-import { UserService } from '../user/user.service';
 import { CreateRoomDto, UpdateRoomDto } from 'src/interfaces/dtos/CreateRoom.dto';
+import { InfoService } from './info.service';
+import { UserService } from '../user/user.service';
+import { diskStorage } from 'multer';
+import { CreateMsgDto } from 'src/interfaces/dtos/CreateMsg.dto';
+import { MailService } from '../mail/mail.service';
+import { join } from 'node:path';
+
 
 @Controller('info')
 @ApiTags('info')
@@ -11,7 +17,8 @@ import { CreateRoomDto, UpdateRoomDto } from 'src/interfaces/dtos/CreateRoom.dto
 export class InfoController {
     constructor(
         private infoService: InfoService,
-        private userService: UserService
+        private userService: UserService,
+        private mailService: MailService
     ) { }
 
     @Get('rooms')
@@ -86,28 +93,94 @@ export class InfoController {
     }
 
     @Post('reserve')
+    @UseInterceptors(FilesInterceptor('files', 4, {
+        storage: diskStorage({
+            destination: process.env.STATIC_FILE_PATH,
+            filename: (_, file, callback) => {
+                callback(null, Buffer.from(file.originalname, 'ascii').toString('utf-8'));
+            },
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        required: true,
+        schema: {
+            type: 'object',
+            properties: {
+                files: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    }
+                },
+                title: {
+                    type: 'string'
+                },
+                desc: {
+                    type: 'string'
+                },
+                attendants: {
+                    type: 'array',
+                    items: {
+                        type: 'string'
+                    }
+                },
+                timeSlot: {
+                    type: 'array',
+                    items: {
+                        type: 'string'
+                    }
+                },
+                rDate: {
+                    type: 'string'
+                },
+                userId: {
+                    type: 'string'
+                },
+                roomId: {
+                    type: 'string'
+                }
+            }
+        }
+    })
     @ApiOperation({ summary: 'Reserve the meeting room' })
     @ApiResponse({ status: 201, description: 'No error.' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Room already reserved.' })
     @ApiResponse({ status: 404, description: 'Room or userId not found' })
     async makeReservation(
-        @Body() reserve: CreateMeetingDto
+        @Request() req,
+        @Body() m: CreateMeetingDto,
+        @UploadedFiles(new ParseFilePipe({
+            validators: [new MaxFileSizeValidator({ maxSize: 1000000 })]
+        })) files: Array<Express.Multer.File>
     ) {
-        const r = await this.infoService.getRoom(reserve.roomId);
+        const r = await this.infoService.getRoom(m.roomId);
         if (!r) {
             throw new NotFoundException('Requested room not found');
         }
-        const u = await this.userService.findById(reserve.userId);
+        const u = await this.userService.findById(m.userId);
         if (!u) {
             throw new NotFoundException('UserId not found');
         }
-        const c = await this.infoService.checkReservation(reserve)
+        const c = await this.infoService.checkReservation(m);
         if (c) {
-            throw new ConflictException(`Timeslot is already reserved.`)
+            throw new ConflictException('Timeslot is already reserved.');
         }
 
-        return this.infoService.makeReservation(reserve);
+        const filenames = files.map(i => {
+            return {
+                path: join(process.env.STATIC_FILE_PATH, i.filename)
+            }
+        });
+
+        for (const i of String(m.attendants).split(',')) {
+            const u = await this.userService.findById(i.toString());
+            this.mailService.sendMsg(m.title, m.desc, u.email, filenames);
+        }
+
+        return this.infoService.makeReservation(m);
     }
 
     @Patch('reserve')
@@ -158,11 +231,54 @@ export class InfoController {
     }
 
     @Post('meeting')
-    @ApiOperation({ summary: 'Send email to all attendant of meeting.' })
+    @UseInterceptors(FilesInterceptor('files', 4, {
+        storage: diskStorage({
+            destination: process.env.STATIC_FILE_PATH,
+            filename: (_, file, callback) => {
+                callback(null, Buffer.from(file.originalname, 'ascii').toString('utf-8'));
+            },
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ summary: 'Send email & attachments to all attendant of meeting.' })
     @ApiResponse({ status: 201, description: 'No error.' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 404, description: 'Meeting not found' })
-    sendMeetingMsg() {
-
+    @ApiBody({
+        required: true,
+        schema: {
+            type: 'object',
+            properties: {
+                files: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    }
+                },
+                message: {
+                    type: 'string'
+                }
+            }
+        }
+    })
+    async sendMeetingMsg(
+        @Request() req,
+        @Body() payload: CreateMsgDto,
+        @Query('meetId') meetId: string,
+        @UploadedFiles(new ParseFilePipe({
+            validators: [new MaxFileSizeValidator({ maxSize: 1000000 })]
+        })) files: Array<Express.Multer.File>
+    ) {
+        const m = await this.infoService.getMeeting(req._id, meetId);
+        const filenames = files.map(i => {
+            return {
+                path: join(process.env.STATIC_FILE_PATH, i.filename)
+            }
+        });
+        for (const i of m.attendants) {
+            const u = await this.userService.findById(i.toString());
+            this.mailService.sendMsg(m.title, payload.message, u.email, filenames);
+        }
     }
 }

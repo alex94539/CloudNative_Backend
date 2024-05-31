@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, Request, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/interfaces/schemas/User.schema';
+import { CreateUserDto } from 'src/interfaces/dtos/CreateUser.dto';
 
 @ApiBearerAuth("token")
 @ApiTags('user')
@@ -12,13 +13,26 @@ export class UserController {
     @Get('users')
     @ApiOperation({ summary: 'Get user list' })
     @ApiResponse({ status: 200, description: 'No error.' })
-    getUsers(@Query() key: String) {
-
+    @ApiResponse({ status: 401, description: 'Unauthorized.' })
+    getUsers(@Query() key: string) {
+        return this.userService.findAll();
     }
 
     @Get('user')
-    getUser() {
-
+    @ApiOperation({ summary: 'Get user information.' })
+    @ApiResponse({ status: 200, description: 'No error.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized.' })
+    @ApiResponse({ status: 404, description: 'Not found.' })
+    @ApiResponse({ status: 422, description: 'Missing attribute.' })
+    getUser(
+        @Request() req,
+        @Query('userId') uId: string
+    ) {
+        if (!uId) { throw new UnprocessableEntityException('Missing userId.'); }
+        if (req.role !== 'Admin' && uId !== req._id) {
+            throw new UnauthorizedException('You have to be admin to get this user info.');
+        }
+        return this.userService.findById(uId);
     }
 
     @Post('user')
@@ -28,7 +42,7 @@ export class UserController {
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
     @HttpCode(201)
     postUser(
-        @Body() payload: User
+        @Body() payload: CreateUserDto
     ) {
         return this.userService.newUser(payload);
     }

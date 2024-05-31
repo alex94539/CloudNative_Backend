@@ -7,12 +7,14 @@ import { Meeting, MeetingSchema } from 'src/interfaces/schemas/Meeting.schema';
 import { User, UserSchema } from 'src/interfaces/schemas/User.schema';
 import { UserService } from '../user/user.service';
 import { TimeSlot, TimeSlotSchema } from 'src/interfaces/schemas/TimeSlot.schema';
+import { MailService } from '../mail/mail.service';
 
 @Module({
   controllers: [InfoController],
   providers: [
     InfoService,
-    UserService
+    UserService,
+    MailService
   ],
   imports: [
     MongooseModule.forFeature([

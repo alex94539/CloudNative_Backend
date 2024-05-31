@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, Post, UnprocessableEntityException } f
 import { AuthenticateService } from './authenticate.service';
 
 import { Public } from './authenticate.guard';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateTokenDto } from 'src/interfaces/dtos/CreateToken.dto';
 
 @Controller('authenticate')
@@ -13,6 +13,7 @@ export class AuthenticateController {
     @Public()
     @Post('login')
     @ApiOperation({ summary: 'login to system' })
+    @ApiCreatedResponse({   })
     @ApiResponse({ status: 201, description: 'Authorized.' })
     @ApiResponse({ status: 400, description: 'Bad request.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })

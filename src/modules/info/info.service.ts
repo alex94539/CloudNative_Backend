@@ -26,7 +26,10 @@ export class InfoService {
     }
 
     async newRoom(createRoom: CreateRoomDto) {
-        const createdRoom = new this.roomModel(createRoom);
+        const createdRoom = new this.roomModel({
+            _id: new Types.ObjectId(),
+            ...createRoom
+        });
         return createdRoom.save();
     }
 
@@ -57,7 +60,7 @@ export class InfoService {
             {
                 $and: [
                     {
-                        $or: r.timeSlot.map(i => { return { timeSlot: i } })
+                        $or: String(r.timeSlot).split(",").map(i => { return { timeSlot: i } })
                     },
                     {
                         rDate: r.rDate,
@@ -71,7 +74,7 @@ export class InfoService {
     async makeReservation(c: CreateMeetingDto) {
         const m_id = new Types.ObjectId();
 
-        for (const i of c.timeSlot) {
+        for (const i of String(c.timeSlot).split(',')) {
             const s_id = new Types.ObjectId();
             const t = new this.timeslotModel({
                 _id: s_id,
@@ -87,8 +90,8 @@ export class InfoService {
             rDate: c.rDate,
             title: c.title,
             desc: c.desc,
-            timeSlots: c.timeSlot,
-            attendants: c.attendants.map(i => { return new Types.ObjectId(i) }),
+            timeSlots: String(c.timeSlot).split(','),
+            attendants: String(c.attendants).split(',').map(i => { return new Types.ObjectId(i) }),
             roomId: new Types.ObjectId(c.roomId),
             userId: new Types.ObjectId(c.userId)
         }).save();
