@@ -31,6 +31,7 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 ENV PORT=9999
 ENV NODE_ENV=production
 ENV MONGODB_URI=mongodb://root:password@mongodb
+ENV STATIC_FILE_PATH=/static
 
 # Expose the port the app runs on
 EXPOSE $PORT
