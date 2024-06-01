@@ -25,8 +25,12 @@ export class UserService {
         return this.userModel.findById(Types.ObjectId.createFromHexString(userId), { password: 0 });
     }
 
-    async findAll(): Promise<User[] | undefined> {
-        return this.userModel.find({}, { password: 0 });
+    async findAll(key: string): Promise<User[] | undefined> {
+        return this.userModel.find({
+            firstName: {
+                $regex: new RegExp(key)
+            }
+        }, { password: 0 });
     }
 
     async findUser(username: string): Promise<User | undefined> {

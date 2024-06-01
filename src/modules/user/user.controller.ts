@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Query, Request, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/interfaces/schemas/User.schema';
 import { CreateUserDto } from 'src/interfaces/dtos/CreateUser.dto';
 
@@ -11,11 +11,19 @@ export class UserController {
     constructor(private userService: UserService) { }
 
     @Get('users')
+    @ApiQuery({
+        name: "key",
+        type: String,
+        required: false,
+    })
     @ApiOperation({ summary: 'Get user list' })
     @ApiResponse({ status: 200, description: 'No error.' })
     @ApiResponse({ status: 401, description: 'Unauthorized.' })
-    getUsers(@Query() key: string) {
-        return this.userService.findAll();
+    getUsers(
+        @Query('key') key?: string
+    ) {
+        key = key ? key : '.';
+        return this.userService.findAll(key);
     }
 
     @Get('user')
