@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Query, Request, UnauthorizedException, NotFoundException, ConflictException, Patch, UnprocessableEntityException, Req, UseInterceptors, UploadedFile, UploadedFiles, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, Request, UnauthorizedException, NotFoundException, ConflictException, Patch, UnprocessableEntityException, Req, UseInterceptors, UploadedFile, UploadedFiles, ParseFilePipe, MaxFileSizeValidator, Delete } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CreateMeetingDto, UpdateMeetingDto } from 'src/interfaces/dtos/CreateMeeting.dto';
@@ -41,6 +41,17 @@ export class InfoController {
         return await this.infoService.getRoom(roomId);
     }
 
+    @Get('room_status')
+    @ApiOperation({ summary: 'Get occupied time slot of specific room.' })
+    @ApiResponse({ status: 200, description: 'No error.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    async getTimeslot(
+        @Query('roomId') roomId: string,
+        @Query('date') rDate: string
+    ) {
+        return await this.infoService.getOccupiedSlot(roomId, rDate);
+    }
+
     @Post('room')
     @ApiOperation({ summary: 'Add new meeting room info.' })
     @ApiResponse({ status: 200, description: 'No error.' })
@@ -49,7 +60,7 @@ export class InfoController {
         if (!req?.role || req.role !== 'Admin') {
             throw new UnauthorizedException('You must be admin to add new room');
         }
-        return this.infoService.newRoom(newRoom);
+        return await this.infoService.newRoom(newRoom);
     }
 
     @Patch('room')
@@ -67,7 +78,7 @@ export class InfoController {
         if (!roomId) {
             throw new UnprocessableEntityException('Room id must present to perform update.');
         }
-        return this.infoService.updateRoom(roomId, uRoom);
+        return await this.infoService.updateRoom(roomId, uRoom);
     }
 
     @Get('reserves')
@@ -205,6 +216,28 @@ export class InfoController {
         }
 
         return this.infoService.updateReservation(payload, r);
+    }
+
+    @Delete('reserve')
+    @ApiOperation({ summary: 'Delete meetings.' })
+    @ApiResponse({ status: 200, description: 'No error.' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Meeting not found' })
+    async deleteReserve(
+        @Request() req,
+        @Query('meetId') meetId: string
+    ) {
+        if (req.role === 'Admin' || await this.infoService.checkOwnerShip(req._id, meetId)) {
+            const m = await this.infoService.getMeeting(req._id, meetId);
+            for (const i of m.attendants) {
+                const u = await this.userService.findById(i.toString());
+                this.mailService.sendMsg(m.title, `Meeting ${m.title} has been cancelled by ${req.username}`, u.email, []);
+            }
+            return this.infoService.deleteReservations(meetId);
+        }
+        else {
+            throw new UnauthorizedException('You are neithor Admin nor the meeting owner.');
+        }
     }
 
     @Get('meetings')

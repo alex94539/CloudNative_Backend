@@ -44,6 +44,17 @@ export class InfoService {
         }).exec();
     }
 
+    async deleteReservations(meetId: string) {
+        this.timeslotModel.deleteMany({
+            meeting: Types.ObjectId.createFromHexString(meetId)
+        }).exec();
+
+
+        return this.meetingModel.deleteOne({
+            _id: Types.ObjectId.createFromHexString(meetId)
+        }).exec()
+    }
+
     async getReservations(id: string) {
         return this.meetingModel.find(
             { userId: Types.ObjectId.createFromHexString(id) },
@@ -116,7 +127,19 @@ export class InfoService {
     }
 
     async getMeetings(uId: string) {
-        return this.meetingModel.find({ attendants: Types.ObjectId.createFromHexString(uId) }).exec();
+        const today = new Date();
+        return this.meetingModel.find({
+            $and: [
+                {
+                    attendants: Types.ObjectId.createFromHexString(uId)
+                },
+                {
+                    rDate: {
+                        $gte: `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate()}`
+                    }
+                }
+            ]
+        }).exec();
     }
 
     async getMeeting(uId: string, mId: string) {
@@ -126,7 +149,10 @@ export class InfoService {
         }).exec();
     }
 
-    async postMeetingMsg() {
-
+    async getOccupiedSlot(roomId: string, rDate: string): Promise<TimeSlot[]> {
+        return this.timeslotModel.find({
+            roomId: Types.ObjectId.createFromHexString(roomId),
+            rDate: rDate
+        }).exec()
     }
 }
