@@ -164,9 +164,11 @@ export class InfoController {
         @Request() req,
         @Body() m: CreateMeetingDto,
         @UploadedFiles(new ParseFilePipe({
-            validators: [new MaxFileSizeValidator({ maxSize: 1000000 })]
-        })) files: Array<Express.Multer.File>
+            validators: [new MaxFileSizeValidator({ maxSize: 1000000 })],
+            fileIsRequired: false
+        })) files?: Array<Express.Multer.File>
     ) {
+        console.log(m);
         const r = await this.infoService.getRoom(m.roomId);
         if (!r) {
             throw new NotFoundException('Requested room not found');
@@ -180,11 +182,11 @@ export class InfoController {
             throw new ConflictException('Timeslot is already reserved.');
         }
 
-        const filenames = files.map(i => {
+        const filenames = files ? files.map(i => {
             return {
                 path: join(process.env.STATIC_FILE_PATH, i.filename)
             }
-        });
+        }) : [];
 
         for (const i of String(m.attendants).split(',')) {
             const u = await this.userService.findById(i.toString());
