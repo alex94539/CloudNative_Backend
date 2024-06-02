@@ -135,7 +135,7 @@ export class InfoService {
                 },
                 {
                     rDate: {
-                        $gte: `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate()}`
+                        $gte: `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${(today.getDate()).toString().padStart(2, '0') }`
                     }
                 }
             ]
