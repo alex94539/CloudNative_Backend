@@ -23,6 +23,9 @@ export class Meeting {
     @Prop()
     attendants: Types.ObjectId[];
 
+    @Prop()
+    timeSlots: number[];
+
     @Prop({ type: Types.ObjectId, ref: Room.name, required: true })
     roomId: Room;
 

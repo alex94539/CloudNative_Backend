@@ -101,7 +101,7 @@ export class InfoService {
             rDate: c.rDate,
             title: c.title,
             desc: c.desc,
-            timeSlots: String(c.timeSlot).split(','),
+            timeSlots: String(c.timeSlot).split(',').map(i => Number(i)),
             attendants: String(c.attendants).split(',').map(i => { return new Types.ObjectId(i) }),
             roomId: new Types.ObjectId(c.roomId),
             userId: new Types.ObjectId(c.userId)
