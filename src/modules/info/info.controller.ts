@@ -188,9 +188,13 @@ export class InfoController {
             }
         }) : [];
 
+        const slots = String(m.timeSlot).split(',');
+
+        const ic = this.mailService.getIcalObject(Number(slots[0]), Number(slots[slots.length - 1]), m.title, m.desc, r.building, m.rDate);
+
         for (const i of String(m.attendants).split(',')) {
             const u = await this.userService.findById(i.toString());
-            this.mailService.sendMsg(m.title, m.desc, u.email, filenames);
+            this.mailService.sendMsg(m.title, m.desc, u.email, filenames, ic);
         }
 
         return this.infoService.makeReservation(m);
