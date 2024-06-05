@@ -123,8 +123,12 @@ export class InfoService {
                 })
             );
         }
-        return this.meetingModel.findByIdAndUpdate(r._id, {
+        return this.meetingModel.findOneAndUpdate({
+            _id: r._id
+        }, {
             $set: u
+        }, {
+            returnDocument: 'after'
         }).exec();
     }
 

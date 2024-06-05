@@ -216,7 +216,7 @@ export class InfoController {
         if (!payload) {
             throw new UnprocessableEntityException('Empty payload.');
         }
-        const r = await this.getReservation(meetId);
+        const r = await this.infoService.getReservation(meetId);
         if (!r._id) {
             throw new NotFoundException('Meeting not found.');
         }
