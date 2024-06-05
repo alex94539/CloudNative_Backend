@@ -123,7 +123,9 @@ export class InfoService {
                 })
             );
         }
-        return this.meetingModel.findByIdAndUpdate(r._id, u).exec();
+        return this.meetingModel.findByIdAndUpdate(r._id, {
+            $set: u
+        }).exec();
     }
 
     async getMeetings(uId: string) {
