@@ -210,7 +210,7 @@ export class InfoController {
         @Body() payload: UpdateMeetingDto,
         @Query('meetId') meetId: string
     ) {
-        if (req.role !== 'Admin' && !this.infoService.checkOwnerShip(req.userId, meetId)) {
+        if (req.role !== 'Admin' && !(await this.infoService.checkOwnerShip(req._id, meetId))) {
             throw new UnauthorizedException('Unauthorized to modify this meeting.');
         }
         if (!payload) {
